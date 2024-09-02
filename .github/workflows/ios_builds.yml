@@ -16,6 +16,20 @@ jobs:
   ios-template:
     runs-on: "macos-latest"
     name: Template (target=template_release)
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Template (target=template_release)
+            cache-name: ios-template
+            target: template_release
+            tests: false
+
+          - name: Template (target=template_release) w/ Mono
+            cache-name: ios-template-mono
+            target: template_release
+            tests: false
+            sconsflags: module_mono_enabled=yes
 
     steps:
       - uses: actions/checkout@v4
@@ -24,6 +38,8 @@ jobs:
 
       - name: Restore Godot build cache
         uses: ./.github/actions/godot-cache-restore
+        with:
+          cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
       - name: Setup Python and SCons
@@ -32,14 +48,18 @@ jobs:
       - name: Compilation (arm64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: ${{ env.SCONSFLAGS }}
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: ios
           target: template_release
           tests: false
 
       - name: Save Godot build cache
         uses: ./.github/actions/godot-cache-save
+        with:
+          cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
+        with:
+          name: ${{ matrix.cache-name }}

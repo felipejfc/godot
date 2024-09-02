@@ -20,18 +20,34 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor, tests=yes)
-            cache-name: macos-editor
-            target: editor
-            tests: true
-            bin: "./bin/godot.macos.editor.universal"
+          #- name: Editor (target=editor, tests=yes)
+          #  cache-name: macos-editor
+          #  target: editor
+          #  tests: true
+          #  bin: "./bin/godot.macos.editor.universal"
 
-          - name: Template (target=template_release)
-            cache-name: macos-template
-            target: template_release
-            tests: true
-            sconsflags: debug_symbols=no tests=yes
-            bin: "./bin/godot.macos.template_release.universal"
+          - name: Editor w/ Mono (target=editor)
+            cache-name: macos-editor-mono
+            target: editor
+            build-mono: true
+            sconsflags: module_mono_enabled=yes
+            tests: false
+            bin: "./bin/godot.macos.editor.universal.mono"
+
+          #- name: Template (target=template_release)
+          #  cache-name: macos-template
+          #  target: template_release
+          #  tests: true
+          #  sconsflags: debug_symbols=no tests=yes
+          #  bin: "./bin/godot.macos.template_release.universal"
+
+          #- name: Template w/ Mono (target=template_release)
+          #  cache-name: macos-template-mono
+          #  target: template_release
+          #  build-mono: true
+          #  tests: true
+          #  sconsflags: module_mono_enabled=yes tests=yes
+          #  bin: "./bin/godot.macos.template_release.universal.mono"
 
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +70,7 @@ jobs:
       - name: Compilation (x86_64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: ${{ env.SCONSFLAGS }} arch=x86_64
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }} arch=x86_64
           platform: macos
           target: ${{ matrix.target }}
           tests: ${{ matrix.tests }}
@@ -62,7 +78,7 @@ jobs:
       - name: Compilation (arm64)
         uses: ./.github/actions/godot-build
         with:
-          sconsflags: ${{ env.SCONSFLAGS }} arch=arm64
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }} arch=arm64
           platform: macos
           target: ${{ matrix.target }}
           tests: ${{ matrix.tests }}
@@ -75,10 +91,20 @@ jobs:
 
       - name: Prepare artifact
         run: |
-          lipo -create ./bin/godot.macos.${{ matrix.target }}.x86_64 ./bin/godot.macos.${{ matrix.target }}.arm64 -output ./bin/godot.macos.${{ matrix.target }}.universal
-          rm ./bin/godot.macos.${{ matrix.target }}.x86_64 ./bin/godot.macos.${{ matrix.target }}.arm64
+          lipo -create ./bin/godot.macos.${{ matrix.target }}.x86_64.mono ./bin/godot.macos.${{ matrix.target }}.arm64.mono -output ${{ matrix.bin }}
+          rm ./bin/godot.macos.${{ matrix.target }}.x86_64.mono ./bin/godot.macos.${{ matrix.target }}.arm64.mono
           strip bin/godot.*
           chmod +x bin/godot.*
+
+      - name: Generate C# glue
+        if: ${{ matrix.build-mono }}
+        run: |
+          ${{ matrix.bin }} --headless --generate-mono-glue ./modules/mono/glue
+
+      - name: Build .NET solutions
+        if: ${{ matrix.build-mono }}
+        run: |
+          ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
