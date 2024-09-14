@@ -20,14 +20,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Template (target=template_release)
-            cache-name: ios-template
-            target: template_release
-            tests: false
-
           - name: Template (target=template_release) w/ Mono
             cache-name: ios-template-mono
             target: template_release
+            tests: false
+            sconsflags: module_mono_enabled=yes
+
+          - name: Template (target=template_debug) w/ Mono
+            cache-name: ios-template-mono
+            target: template_debug
             tests: false
             sconsflags: module_mono_enabled=yes
 
@@ -50,7 +51,7 @@ jobs:
         with:
           sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: ios
-          target: template_release
+          target: ${{ matrix.target }}
           tests: false
 
       - name: Save Godot build cache

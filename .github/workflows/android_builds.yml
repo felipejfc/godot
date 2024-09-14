@@ -50,6 +50,18 @@ jobs:
             tests: false
             sconsflags: arch=arm64 module_mono_enabled=yes
 
+          - name: Template arm32 w/ Mono (target=template_release, arch=arm32)
+            cache-name: android-template-arm32-mono
+            target: template_debug
+            tests: false
+            sconsflags: arch=arm32 module_mono_enabled=yes
+
+          - name: Template arm64 w/ Mono (target=template_release, arch=arm64)
+            cache-name: android-template-arm64-mono
+            target: template_debug
+            tests: false
+            sconsflags: arch=arm64 module_mono_enabled=yes
+
     steps:
       - uses: actions/checkout@v4
         with:
