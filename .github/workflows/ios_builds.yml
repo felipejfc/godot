@@ -60,7 +60,32 @@ jobs:
           cache-name: ${{ matrix.cache-name }}
         continue-on-error: true
 
-      - name: Upload artifact
-        uses: ./.github/actions/upload-artifact
+      - name: Copy artifacts
+        run: |
+          mkdir -p ~/ios-artifacts/${{ matrix.target }}
+          cp -R bin/* ~/ios-artifacts/${{ matrix.target }}/
+
+      - name: Upload individual artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.cache-name }}
+          name: ios-template-${{ matrix.target }}
+          path: ~/ios-artifacts/${{ matrix.target }}
+          retention-days: 1
+
+    outputs:
+      artifact-path: ios-artifacts
+
+  upload-combined-artifact:
+    needs: ios-template
+    runs-on: macos-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ios-artifacts
+
+      - name: Upload combined artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-templates-mono-combined
+          path: ios-artifacts
