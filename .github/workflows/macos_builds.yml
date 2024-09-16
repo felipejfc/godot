@@ -94,13 +94,12 @@ jobs:
           lipo -create ./bin/godot.macos.${{ matrix.target }}.x86_64.mono ./bin/godot.macos.${{ matrix.target }}.arm64.mono -output ${{ matrix.bin }}
           rm ./bin/godot.macos.${{ matrix.target }}.x86_64.mono ./bin/godot.macos.${{ matrix.target }}.arm64.mono
           strip bin/godot.*
-          chmod +x bin/godot.*
           cp -r misc/dist/macos_tools.app ./bin/Godot.app
           mkdir -p ./bin/Godot.app/Contents/MacOS
           mv ${{ matrix.bin }} ./bin/Godot.app/Contents/MacOS/Godot
           chmod +x ./bin/Godot.app/Contents/MacOS/Godot
+          mv ./bin/GodotSharp ./bin/Godot.app/Contents/Resources/
           codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor.entitlements -s - ./bin/Godot.app
-
 
       - name: Generate C# glue
         if: ${{ matrix.build-mono }}
