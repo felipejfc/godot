@@ -97,9 +97,7 @@ jobs:
           cp -r misc/dist/macos_tools.app ./bin/Godot.app
           mkdir -p ./bin/Godot.app/Contents/MacOS
           mv ${{ matrix.bin }} ./bin/Godot.app/Contents/MacOS/Godot
-          chmod +x ./bin/Godot.app/Contents/MacOS/Godot
-          mv ./bin/GodotSharp ./bin/Godot.app/Contents/Resources/
-          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor.entitlements -s - ./bin/Godot.app
+          chmod a+x ./bin/Godot.app/Contents/MacOS/Godot
 
       - name: Generate C# glue
         if: ${{ matrix.build-mono }}
@@ -110,6 +108,8 @@ jobs:
         if: ${{ matrix.build-mono }}
         run: |
           ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin
+          mv ./bin/GodotSharp ./bin/Godot.app/Contents/Resources/
+          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor.entitlements -s - ./bin/Godot.app
 
       - name: Upload artifact
         uses: ./.github/actions/upload-artifact
