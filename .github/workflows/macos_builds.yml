@@ -95,11 +95,17 @@ jobs:
           rm ./bin/godot.macos.${{ matrix.target }}.x86_64.mono ./bin/godot.macos.${{ matrix.target }}.arm64.mono
           strip bin/godot.*
           chmod +x bin/godot.*
+          cp -r misc/dist/macos_tools.app ./bin/Godot.app
+          mkdir -p ./bin/Godot.app/Contents/MacOS
+          mv ${{ matrix.bin }} ./bin/Godot.app/Contents/MacOS/Godot
+          chmod +x ./bin/Godot.app/Contents/MacOS/Godot
+          codesign --force --timestamp --options=runtime --entitlements misc/dist/macos/editor.entitlements -s - ./bin/Godot.app
+
 
       - name: Generate C# glue
         if: ${{ matrix.build-mono }}
         run: |
-          ${{ matrix.bin }} --headless --generate-mono-glue ./modules/mono/glue
+          ./bin/Godot.app/Contents/MacOS/Godot --headless --generate-mono-glue ./modules/mono/glue
 
       - name: Build .NET solutions
         if: ${{ matrix.build-mono }}
@@ -114,6 +120,6 @@ jobs:
       - name: Unit tests
         if: ${{ matrix.tests }}
         run: |
-          ${{ matrix.bin }} --version
-          ${{ matrix.bin }} --help
-          ${{ matrix.bin }} --test --force-colors
+          ./bin/Godot.app/Contents/MacOS/Godot --version
+          ./bin/Godot.app/Contents/MacOS/Godot --help
+          ./bin/Godot.app/Contents/MacOS/Godot --test --force-colors
