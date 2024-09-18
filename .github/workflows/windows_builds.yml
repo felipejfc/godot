@@ -91,10 +91,12 @@ jobs:
         continue-on-error: true
 
       - name: Prepare artifact
+        if: ${{ matrix.artifact }}
         run: |
           Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
 
       - name: Upload artifact
+        if: ${{ matrix.artifact }}
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}

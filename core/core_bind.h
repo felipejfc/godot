@@ -83,6 +83,7 @@ public:
 	void set_abort_on_missing_resources(bool p_abort);
 	PackedStringArray get_dependencies(const String &p_path);
 	bool has_cached(const String &p_path);
+	Ref<Resource> get_cached_ref(const String &p_path);
 	bool exists(const String &p_path, const String &p_type_hint = "");
 	ResourceUID::ID get_resource_uid(const String &p_path);
 
@@ -168,11 +169,18 @@ protected:
 	static void _bind_methods();
 	static OS *singleton;
 
+#ifndef DISABLE_DEPRECATED
+	Dictionary _execute_with_pipe_bind_compat_94434(const String &p_path, const Vector<String> &p_arguments);
+
+	static void _bind_compatibility_methods();
+#endif
+
 public:
 	enum RenderingDriver {
 		RENDERING_DRIVER_VULKAN,
 		RENDERING_DRIVER_OPENGL3,
 		RENDERING_DRIVER_D3D12,
+		RENDERING_DRIVER_METAL,
 	};
 
 	PackedByteArray get_entropy(int p_bytes);
@@ -200,7 +208,7 @@ public:
 	String get_executable_path() const;
 	String read_string_from_stdin();
 	int execute(const String &p_path, const Vector<String> &p_arguments, Array r_output = Array(), bool p_read_stderr = false, bool p_open_console = false);
-	Dictionary execute_with_pipe(const String &p_path, const Vector<String> &p_arguments);
+	Dictionary execute_with_pipe(const String &p_path, const Vector<String> &p_arguments, bool p_blocking = true);
 	int create_process(const String &p_path, const Vector<String> &p_arguments, bool p_open_console = false);
 	int create_instance(const Vector<String> &p_arguments);
 	Error kill(int p_pid);
@@ -434,12 +442,17 @@ class Semaphore : public RefCounted {
 	GDCLASS(Semaphore, RefCounted);
 	::Semaphore semaphore;
 
+protected:
 	static void _bind_methods();
+#ifndef DISABLE_DEPRECATED
+	void _post_bind_compat_93605();
+	static void _bind_compatibility_methods();
+#endif // DISABLE_DEPRECATED
 
 public:
 	void wait();
 	bool try_wait();
-	void post();
+	void post(int p_count = 1);
 };
 
 class Thread : public RefCounted {
@@ -492,6 +505,8 @@ public:
 	TypedArray<Dictionary> class_get_signal_list(const StringName &p_class, bool p_no_inheritance = false) const;
 
 	TypedArray<Dictionary> class_get_property_list(const StringName &p_class, bool p_no_inheritance = false) const;
+	StringName class_get_property_getter(const StringName &p_class, const StringName &p_property);
+	StringName class_get_property_setter(const StringName &p_class, const StringName &p_property);
 	Variant class_get_property(Object *p_object, const StringName &p_property) const;
 	Error class_set_property(Object *p_object, const StringName &p_property, const Variant &p_value) const;
 
@@ -502,6 +517,7 @@ public:
 	int class_get_method_argument_count(const StringName &p_class, const StringName &p_method, bool p_no_inheritance = false) const;
 
 	TypedArray<Dictionary> class_get_method_list(const StringName &p_class, bool p_no_inheritance = false) const;
+	Variant class_call_static_method(const Variant **p_arguments, int p_argcount, Callable::CallError &r_call_error);
 
 	PackedStringArray class_get_integer_constant_list(const StringName &p_class, bool p_no_inheritance = false) const;
 	bool class_has_integer_constant(const StringName &p_class, const StringName &p_name) const;
