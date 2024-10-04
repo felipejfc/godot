@@ -544,7 +544,8 @@ Error RenderingDeviceDriverVulkan::_check_device_features() {
 	vkGetPhysicalDeviceFeatures(physical_device, &physical_device_features);
 
 	// Check for required features.
-	if (!physical_device_features.imageCubeArray || !physical_device_features.independentBlend) {
+	//if (!physical_device_features.imageCubeArray || !physical_device_features.independentBlend) { //this was removed due to incompatibility with some older ios devices. we should ensure we're not using imageCubeArray. In the future when we migrate to metal on iOS this hack won't be needed anymore.
+	if (!physical_device_features.independentBlend) {
 		String error_string = vformat("Your GPU (%s) does not support the following features which are required to use Vulkan-based renderers in Godot:\n\n", context_device.name);
 		if (!physical_device_features.imageCubeArray) {
 			error_string += "- No support for image cube arrays.\n";
