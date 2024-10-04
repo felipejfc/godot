@@ -11,6 +11,13 @@
 		<link title="Operating System Testing Demo">https://godotengine.org/asset-library/asset/2789</link>
 	</tutorials>
 	<methods>
+		<method name="add_logger">
+			<return type="void" />
+			<param index="0" name="logger" type="Logger" />
+			<description>
+				Add a custom logger to intercept the internal message stream.
+			</description>
+		</method>
 		<method name="alert">
 			<return type="void" />
 			<param index="0" name="text" type="String" />
@@ -687,6 +694,13 @@
 				Reads a user input string from the standard input (usually the terminal). This operation is [i]blocking[/i], which causes the window to freeze if [method read_string_from_stdin] is called on the main thread. The thread calling [method read_string_from_stdin] will block until the program receives a line break in standard input (usually by the user pressing [kbd]Enter[/kbd]).
 				[b]Note:[/b] This method is implemented on Linux, macOS and Windows.
 				[b]Note:[/b] On exported Windows builds, run the console wrapper executable to access the terminal. Otherwise, the standard input will not work correctly. If you need a single executable with console support, use a custom build compiled with the [code]windows_subsystem=console[/code] flag.
+			</description>
+		</method>
+		<method name="remove_logger">
+			<return type="void" />
+			<param index="0" name="logger" type="Logger" />
+			<description>
+				Remove a custom logger added by [method add_logger].
 			</description>
 		</method>
 		<method name="request_permission">
