@@ -23,20 +23,27 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor, tests=yes)
-            cache-name: windows-editor
-            target: editor
-            tests: true
-            # Skip debug symbols, they're way too big with MSVC.
-            sconsflags: debug_symbols=no vsproj=yes vsproj_gen_only=no windows_subsystem=console
-            bin: "./bin/godot.windows.editor.x86_64.exe"
+         # - name: Editor (target=editor, tests=yes)
+         #   cache-name: windows-editor
+         #   target: editor
+         #   tests: true
+         #   # Skip debug symbols, they're way too big with MSVC.
+         #   sconsflags: debug_symbols=no vsproj=yes vsproj_gen_only=no windows_subsystem=console
+         #   bin: "./bin/godot.windows.editor.x86_64.exe"
 
-          - name: Template (target=template_release)
-            cache-name: windows-template
-            target: template_release
-            tests: true
-            sconsflags: debug_symbols=no tests=yes
-            bin: "./bin/godot.windows.template_release.x86_64.console.exe"
+          - name: Editor w/ Mono (target=editor)
+            cache-name: windows-editor-mono
+            target: editor
+            tests: false
+            sconsflags: module_mono_enabled=yes vsproj=yes vsproj_gen_only=no windows_subsystem=console
+            bin: "./bin/godot.windows.editor.x86_64.mono.exe"
+
+          #- name: Template (target=template_release)
+          #  cache-name: windows-template
+          #  target: template_release
+          #  tests: true
+          #  sconsflags: debug_symbols=no tests=yes
+          #  bin: "./bin/godot.windows.template_release.x86_64.console.exe"
 
     steps:
       - uses: actions/checkout@v4
@@ -84,10 +91,12 @@ jobs:
         continue-on-error: true
 
       - name: Prepare artifact
+        if: ${{ matrix.artifact }}
         run: |
           Remove-Item bin/* -Include *.exp,*.lib,*.pdb -Force
 
       - name: Upload artifact
+        if: ${{ matrix.artifact }}
         uses: ./.github/actions/upload-artifact
         with:
           name: ${{ matrix.cache-name }}

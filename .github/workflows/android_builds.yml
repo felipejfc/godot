@@ -4,7 +4,6 @@ on:
 
 # Global Settings
 env:
-  # Used for the cache key. Add version suffix to force clean build.
   GODOT_BASE_BRANCH: master
   SCONSFLAGS: verbose=yes warnings=extra werror=yes debug_symbols=no module_text_server_fb_enabled=yes
 
@@ -13,30 +12,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-android:
+  build-android-arm32:
     runs-on: "ubuntu-20.04"
     name: ${{ matrix.name }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: Editor (target=editor)
-            cache-name: android-editor
-            target: editor
-            tests: false
-            sconsflags: arch=arm64 production=yes
-
-          - name: Template arm32 (target=template_release, arch=arm32)
-            cache-name: android-template-arm32
+          - name: Template arm32 w/ Mono (target=template_release)
             target: template_release
-            tests: false
-            sconsflags: arch=arm32
-
-          - name: Template arm64 (target=template_release, arch=arm64)
-            cache-name: android-template-arm64
-            target: template_release
-            tests: false
-            sconsflags: arch=arm64
+            sconsflags: arch=arm32 module_mono_enabled=yes
+          - name: Template arm32 w/ Mono (target=template_debug)
+            target: template_debug
+            sconsflags: arch=arm32 module_mono_enabled=yes
 
     steps:
       - uses: actions/checkout@v4
@@ -49,11 +37,55 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Restore Godot build cache
-        uses: ./.github/actions/godot-cache-restore
+      - name: Setup Python and SCons
+        uses: ./.github/actions/godot-deps
+
+      - name: Compilation
+        uses: ./.github/actions/godot-build
         with:
-          cache-name: ${{ matrix.cache-name }}
-        continue-on-error: true
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: android
+          target: ${{ matrix.target }}
+          tests: false
+
+      - name: Generate Godot templates
+        run: |
+          cd platform/android/java
+          ./gradlew generateGodotTemplates
+          cd ../../..
+          ls -l bin/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-template-arm32-mono-${{ matrix.target }}
+          path: bin/
+          retention-days: 1
+
+  build-android-arm64:
+    runs-on: "ubuntu-20.04"
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Template arm64 w/ Mono (target=template_release)
+            target: template_release
+            sconsflags: arch=arm64 module_mono_enabled=yes
+          - name: Template arm64 w/ Mono (target=template_debug)
+            target: template_debug
+            sconsflags: arch=arm64 module_mono_enabled=yes
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
       - name: Setup Python and SCons
         uses: ./.github/actions/godot-deps
@@ -64,31 +96,53 @@ jobs:
           sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
           platform: android
           target: ${{ matrix.target }}
-          tests: ${{ matrix.tests }}
-
-      - name: Save Godot build cache
-        uses: ./.github/actions/godot-cache-save
-        with:
-          cache-name: ${{ matrix.cache-name }}
-        continue-on-error: true
+          tests: false
 
       - name: Generate Godot templates
-        if: matrix.target == 'template_release'
         run: |
           cd platform/android/java
           ./gradlew generateGodotTemplates
           cd ../../..
           ls -l bin/
 
-      - name: Generate Godot editor
-        if: matrix.target == 'editor'
-        run: |
-          cd platform/android/java
-          ./gradlew generateGodotEditor
-          cd ../../..
-          ls -l bin/android_editor_builds/
-
       - name: Upload artifact
-        uses: ./.github/actions/upload-artifact
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.cache-name }}
+          name: android-template-arm64-mono-${{ matrix.target }}
+          path: bin/
+          retention-days: 1
+
+  combine-artifacts:
+    needs: [build-android-arm32, build-android-arm64]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Combine arm32 artifacts
+        run: |
+          mkdir -p combined/arm32
+          cp -r artifacts/android-template-arm32-mono-template_release/* combined/arm32/
+          cp -r artifacts/android-template-arm32-mono-template_debug/* combined/arm32/
+
+      - name: Combine arm64 artifacts
+        run: |
+          mkdir -p combined/arm64
+          cp -r artifacts/android-template-arm64-mono-template_release/* combined/arm64/
+          cp -r artifacts/android-template-arm64-mono-template_debug/* combined/arm64/
+
+      - name: Upload combined arm32 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-template-arm32-mono-combined
+          path: combined/arm32
+          if-no-files-found: error
+
+      - name: Upload combined arm64 artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: android-template-arm64-mono-combined
+          path: combined/arm64
+          if-no-files-found: error
