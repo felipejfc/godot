@@ -123,15 +123,15 @@ jobs:
 
       - name: Combine arm32 artifacts
         run: |
-          mkdir -p combined/arm32
-          cp -r artifacts/android-template-arm32-mono-template_release/* combined/arm32/
-          cp -r artifacts/android-template-arm32-mono-template_debug/* combined/arm32/
+          mkdir -p combined/arm32/release combined/arm32/debug
+          cp -r artifacts/android-template-arm32-mono-template_release/* combined/arm32/release/
+          cp -r artifacts/android-template-arm32-mono-template_debug/* combined/arm32/debug/
 
       - name: Combine arm64 artifacts
         run: |
-          mkdir -p combined/arm64
-          cp -r artifacts/android-template-arm64-mono-template_release/* combined/arm64/
-          cp -r artifacts/android-template-arm64-mono-template_debug/* combined/arm64/
+          mkdir -p combined/arm64/release combined/arm64/debug
+          cp -r artifacts/android-template-arm64-mono-template_release/* combined/arm64/release/
+          cp -r artifacts/android-template-arm64-mono-template_debug/* combined/arm64/debug/
 
       - name: Upload combined arm32 artifact
         uses: actions/upload-artifact@v3
