@@ -35,6 +35,7 @@ jobs:
             cache-name: windows-editor-mono
             target: editor
             tests: false
+            artiface: true
             sconsflags: module_mono_enabled=yes vsproj=yes vsproj_gen_only=no windows_subsystem=console
             bin: "./bin/godot.windows.editor.x86_64.mono.exe"
 
