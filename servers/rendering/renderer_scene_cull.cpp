@@ -2258,10 +2258,10 @@ void RendererSceneCull::_light_instance_setup_directional_shadow(int p_shadow_in
 			// This trick here is what stabilizes the shadow (make potential jaggies to not move)
 			// at the cost of some wasted resolution. Still, the quality increase is very well worth it.
 			const real_t unit = (radius + soft_shadow_expand) * 4.0 / texture_size;
-			x_max_cam = Math::snapped(x_vec.dot(center) + radius + soft_shadow_expand, unit);
-			x_min_cam = Math::snapped(x_vec.dot(center) - radius - soft_shadow_expand, unit);
-			y_max_cam = Math::snapped(y_vec.dot(center) + radius + soft_shadow_expand, unit);
-			y_min_cam = Math::snapped(y_vec.dot(center) - radius - soft_shadow_expand, unit);
+			x_max_cam = Math::snapped(x_vec.dot(center) + radius + soft_shadow_expand, unit) * shadow_area_mult;
+			x_min_cam = Math::snapped(x_vec.dot(center) - radius - soft_shadow_expand, unit) * shadow_area_mult;
+			y_max_cam = Math::snapped(y_vec.dot(center) + radius + soft_shadow_expand, unit) * shadow_area_mult;
+			y_min_cam = Math::snapped(y_vec.dot(center) - radius - soft_shadow_expand, unit) * shadow_area_mult;
 		}
 
 		//now that we know all ranges, we can proceed to make the light frustum planes, for culling octree
@@ -4272,6 +4272,8 @@ RendererSceneCull::RendererSceneCull() {
 	bool tighter_caster_culling = GLOBAL_DEF("rendering/lights_and_shadows/tighter_shadow_caster_culling", true);
 	light_culler->set_caster_culling_active(tighter_caster_culling);
 	light_culler->set_light_culling_active(tighter_caster_culling);
+
+	shadow_area_mult = GLOBAL_GET("rendering/lights_and_shadows/directional_shadow/area_multiplier");
 }
 
 RendererSceneCull::~RendererSceneCull() {

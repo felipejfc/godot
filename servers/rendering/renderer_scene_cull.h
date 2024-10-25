@@ -1018,6 +1018,7 @@ public:
 
 	LocalVector<Vector2> camera_jitter_array;
 	RenderingLightCuller *light_culler = nullptr;
+	real_t shadow_area_mult = 1.0f;
 
 	virtual RID instance_allocate();
 	virtual void instance_initialize(RID p_rid);
