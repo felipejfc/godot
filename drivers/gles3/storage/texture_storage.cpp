@@ -1989,7 +1989,7 @@ void TextureStorage::_update_render_target(RenderTarget *rt) {
 		rt->color_type = GL_FLOAT;
 		rt->color_format_size = 8;
 		rt->image_format = Image::FORMAT_RGBAF;
-	} else if (rt->is_transparent) {
+	} else if (rt->is_transparent || !GLOBAL_GET("rendering/gl_compatibility/use_10-bit_framebuffer")) {
 		rt->color_internal_format = GL_RGBA8;
 		rt->color_format = GL_RGBA;
 		rt->color_type = GL_UNSIGNED_BYTE;
