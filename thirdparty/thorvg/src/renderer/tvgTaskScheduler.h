@@ -23,8 +23,6 @@
 #ifndef _TVG_TASK_SCHEDULER_H_
 #define _TVG_TASK_SCHEDULER_H_
 
-#define _DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR
-
 #include <mutex>
 #include <condition_variable>
 
@@ -111,4 +109,3 @@ struct TaskScheduler
 }  //namespace
 
 #endif //_TVG_TASK_SCHEDULER_H_
- 
